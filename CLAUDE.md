@@ -4,28 +4,62 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Node.js project named "convertor" - a minimal JavaScript application with a simple structure. The project appears to be in early development stages with basic scaffolding.
+This is a Node.js project named "mssql-convertor" - a production-ready command-line tool that converts MSSQL database schemas (tables and stored procedures) to language-specific types using quicktype. The project generates TypeScript, Go, C#, Python, Java, Rust, Swift, and other language types from database metadata.
 
 ## Project Structure
 
-- `src/index.js` - Main entry point (currently empty)
-- `package.json` - Node.js project configuration
+```
+src/
+├── index.js       - Main CLI entry point with Commander.js setup
+├── database.js    - Database connection and schema extraction
+├── json.js        - JSON Schema generation with validation and composition
+├── convert.js     - quicktype integration and file generation
+└── parse.js       - SQL stored procedure parsing logic
+
+docker/
+├── init-db.sql    - Database initialization script with test data
+
+.vscode/
+└── launch.json    - VS Code debug configurations
+```
+
+## Key Features
+
+- **Multi-Language Support**: Generate types for 10+ programming languages
+- **Schema Validation**: Built-in JSON Schema validation using AJV
+- **Schema Composition**: Uses JSON Schema `$ref` for referencing table definitions
+- **Nullable Field Handling**: Properly maps SQL NULL/NOT NULL to optional properties
+- **Global Installation**: Can be installed globally via npm from Git repository
+- **Configurable Output**: Support for custom quicktype options via JSON files
+- **Docker Test Environment**: Includes complete test database setup
 
 ## Common Commands
 
 ### Running the CLI application
 ```bash
 # Using npm start (requires arguments)
-npm start -- -c "Server=localhost;Database=mydb;Trusted_Connection=true;" -o ./output
+npm start -- -c "Server=localhost,1433;Database=TestDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=true;" -o ./output
 
 # Direct execution
 node src/index.js -c "connection_string" -o output_directory
 
 # After npm link (globally installed)
-convertor -c "connection_string" -o output_directory
+mssql-convertor -c "connection_string" -o output_directory
+
+# With custom quicktype options
+mssql-convertor -c "connection_string" -o output_directory -q quicktype-config.json
 
 # Show help
-node src/index.js --help
+mssql-convertor --help
+```
+
+### Global Installation
+```bash
+# Install globally from GitHub
+npm install -g git+https://github.com/ryanclark532/convertor.git
+
+# Create local symlink for development
+npm link
 ```
 
 ### Development with debugging
@@ -52,7 +86,7 @@ npx jest tests/index.test.js
 
 ### VS Code Launch Configurations
 The project includes VS Code debug configurations:
-- **Debug Application**: Debug the main application (src/index.js)
+- **Debug Application**: Debug the main application with test database connection
 - **Debug Tests**: Debug all Jest tests
 - **Debug Current Test File**: Debug the currently open test file
 
@@ -76,8 +110,8 @@ docker-compose logs -f mssql
 The Docker container creates a `TestDB` database with:
 
 **Tables:**
-- `Users` - Customer information with sample users
-- `Products` - Product catalog with sample items
+- `Users` - Customer information with nullable fields (Age, Salary, MiddleName, PhoneNumber, LastLoginDate)
+- `Products` - Product catalog with nullable fields (Category, Description, DiscountPercentage, ManufacturerCode)
 - `Orders` - Order records
 - `OrderItems` - Order line items
 - `OrderDetailsView` - View combining order information
@@ -100,26 +134,98 @@ docker-compose down
 
 ## CLI Usage
 
-The convertor tool requires two arguments:
+### Required Arguments
 - `-c, --connection <string>`: MSSQL connection string
 - `-o, --output <directory>`: Output directory path
 
-Example connection strings:
-- `"Server=localhost;Database=TestDB;User Id=sa;Password=YourStrong!Passw0rd;"` (for Docker container)
-- `"Server=localhost;Database=mydb;Trusted_Connection=true;"`
-- `"Server=localhost;Database=mydb;User Id=user;Password=pass;"`
+### Optional Arguments
+- `-q, --quicktype-options <file>`: JSON file containing quicktype configuration
+
+### Example Connection Strings
+- `"Server=localhost,1433;Database=TestDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=true;"` (Docker)
+- `"Server=localhost;Database=mydb;Trusted_Connection=true;"` (Windows Auth)
+- `"Server=localhost;Database=mydb;User Id=user;Password=pass;"` (SQL Auth)
+
+### Quicktype Configuration Examples
+
+**TypeScript:**
+```json
+{
+  "lang": "typescript",
+  "rendererOptions": {
+    "just-types": true,
+    "runtime-typecheck": false
+  }
+}
+```
+
+**Go:**
+```json
+{
+  "lang": "go",
+  "rendererOptions": {
+    "just-types": true,
+    "package-name": "models"
+  }
+}
+```
+
+**C#:**
+```json
+{
+  "lang": "csharp",
+  "rendererOptions": {
+    "just-types": true,
+    "namespace": "MyApp.Models"
+  }
+}
+```
+
+## Architecture & Dependencies
+
+### Core Dependencies
+- **Commander.js**: CLI argument parsing and help generation
+- **mssql**: SQL Server connectivity and query execution
+- **quicktype-core**: Multi-language type generation from JSON Schema
+- **node-sql-parser**: SQL stored procedure parsing
+- **ajv + ajv-formats**: JSON Schema validation with format support
+
+### Architecture Pattern
+The project follows a modular pipeline architecture:
+
+1. **Database Layer** (`database.js`): Connects to SQL Server and extracts table/procedure metadata
+2. **Schema Generation** (`json.js`): Converts database metadata to JSON Schema with validation
+3. **Parsing Layer** (`parse.js`): Analyzes stored procedure SQL to extract return types
+4. **Conversion Layer** (`convert.js`): Uses quicktype to generate language-specific types
+5. **CLI Layer** (`index.js`): Orchestrates the pipeline with user-friendly interface
+
+### Key Features Implementation
+- **JSON Schema Store**: Uses quicktype-core's JSONSchemaStore for schema composition
+- **Type Validation**: All generated schemas are validated with AJV before conversion
+- **Reference Resolution**: Stored procedure schemas can reference table column definitions via `$ref`
+- **Nullable Handling**: SQL `IS_NULLABLE` metadata properly maps to optional properties
+- **Error Handling**: Comprehensive error handling with graceful degradation
+- **Formatted Output**: Generated code follows language-specific formatting conventions
 
 ## Development Notes
 
-- Built with Commander.js for CLI functionality
-- Uses mssql package for SQL Server database connectivity
-- Jest is configured for testing with coverage support
-- Test files are located in the `tests/` directory
-- No build process is currently defined
-- No linting or formatting tools are configured
-- CLI validates and creates output directory if it doesn't exist
-- Database connections are properly handled with error handling and cleanup
+### Code Quality
+- **JSDoc Documentation**: All functions have parameter type documentation
+- **Consistent Formatting**: All source files follow Prettier-style formatting
+- **Error Handling**: Comprehensive error handling with user-friendly messages
+- **Validation**: JSON Schema validation ensures generated schemas are valid
+- **Testing**: Jest test framework configured for unit and integration testing
 
-## Architecture
+### File Generation
+- **One File Per Type**: Each table and stored procedure generates a separate file
+- **Smart Naming**: Generated files use table/procedure names (e.g., `Users.ts`, `GetUserOrderSummary.go`)
+- **Clean Output**: Uses quicktype's "just-types" mode for minimal, clean type definitions
+- **Language Extensions**: Automatic file extension detection for supported languages
 
-This is a basic Node.js project without any frameworks or specific architectural patterns implemented yet. The structure suggests it may be intended as a utility for converting between different formats or data types, but the implementation is not yet present.
+### Database Compatibility
+- **SQL Server 2017+**: Tested with SQL Server 2017 and later versions
+- **System Tables**: Uses `sys.tables`, `sys.columns`, `sys.procedures` for metadata
+- **Connection Pooling**: Proper connection lifecycle management with cleanup
+- **Security**: Supports both SQL Server and Windows authentication
+
+This project represents a complete, production-ready database-to-code generation tool with modern Node.js best practices and comprehensive feature set.
