@@ -35,7 +35,11 @@
         'uniqueidentifier': 'string'
 };
 
-function generateJsonSchema(columns) {
+/**
+ * @param {string} procName
+ * @param {Array<{column: string, type: string, nullable: boolean}>} columns
+ */
+function generateJsonSchemaFromProc(procName, columns) {
     const properties = {};
     const required = [];
     
@@ -46,12 +50,10 @@ function generateJsonSchema(columns) {
             type: jsonType
         };
         
-        // Add format for date/time types
         if (column.type.toLowerCase().includes('date') || column.type.toLowerCase().includes('time')) {
             properties[column.column].format = 'date-time';
         }
         
-        // Add to required if not nullable
         if (!column.nullable) {
             required.push(column.column);
         }
@@ -60,6 +62,7 @@ function generateJsonSchema(columns) {
     const schema = {
         $schema: "http://json-schema.org/draft-07/schema#",
         type: "object",
+        title: procName,
         properties: properties
     };
     
@@ -70,4 +73,48 @@ function generateJsonSchema(columns) {
     return schema;
 }
 
-module.exports = { generateJsonSchema };
+/**
+ * @param {string} tableName
+ * @param {Map<string, {type: string, nullable: boolean}>} tableColumns
+ */
+function generateJsonSchemaFromTable(tableName, tableColumns) {
+    const properties = {};
+    const required = [];
+    
+    tableColumns.forEach((columnInfo, columnName) => {
+        const jsonType = typeMap[columnInfo.type.toLowerCase()] || 'string';
+        
+        properties[columnName] = {
+            type: jsonType
+        };
+        
+        // Add format for date/time types
+        if (columnInfo.type.toLowerCase().includes('date') || columnInfo.type.toLowerCase().includes('time')) {
+            properties[columnName].format = 'date-time';
+        }
+        
+        // Add to required if not nullable
+        if (!columnInfo.nullable) {
+            required.push(columnName);
+        }
+    });
+    
+    const schema = {
+        $schema: "http://json-schema.org/draft-07/schema#",
+        type: "object",
+        title: tableName,
+        properties: properties
+    };
+    
+    if (required.length > 0) {
+        schema.required = required;
+    }
+    
+    
+    return schema;
+}
+
+module.exports = { 
+    generateJsonSchemaFromProc,
+    generateJsonSchemaFromTable
+};

@@ -18,19 +18,24 @@ CREATE TABLE Users (
     Email nvarchar(100) UNIQUE NOT NULL,
     DateCreated datetime2 DEFAULT GETDATE(),
     IsActive bit DEFAULT 1,
-    Age int,
-    Salary decimal(10,2)
+    Age int NULL,
+    Salary decimal(10,2) NULL,
+    MiddleName nvarchar(50) NULL,
+    PhoneNumber nvarchar(20) NULL,
+    LastLoginDate datetime2 NULL
 );
 GO
 
 CREATE TABLE Products (
     ProductID int IDENTITY(1,1) PRIMARY KEY,
     ProductName nvarchar(100) NOT NULL,
-    Category nvarchar(50),
+    Category nvarchar(50) NULL,
     Price decimal(10,2) NOT NULL,
     Stock int DEFAULT 0,
-    Description nvarchar(500),
-    DateAdded datetime2 DEFAULT GETDATE()
+    Description nvarchar(500) NULL,
+    DateAdded datetime2 DEFAULT GETDATE(),
+    DiscountPercentage decimal(5,2) NULL,
+    ManufacturerCode nvarchar(20) NULL
 );
 GO
 
@@ -52,30 +57,30 @@ CREATE TABLE OrderItems (
 );
 GO
 
-INSERT INTO Users (FirstName, LastName, Email, Age, Salary) VALUES
-('John', 'Doe', 'john.doe@email.com', 30, 75000.00),
-('Jane', 'Smith', 'jane.smith@email.com', 28, 68000.00),
-('Mike', 'Johnson', 'mike.johnson@email.com', 35, 82000.00),
-('Sarah', 'Wilson', 'sarah.wilson@email.com', 32, 71000.00),
-('David', 'Brown', 'david.brown@email.com', 29, 65000.00),
-('Emily', 'Davis', 'emily.davis@email.com', 27, 63000.00),
-('Robert', 'Miller', 'robert.miller@email.com', 45, 95000.00),
-('Lisa', 'Garcia', 'lisa.garcia@email.com', 31, 77000.00),
-('Mark', 'Anderson', 'mark.anderson@email.com', 38, 89000.00),
-('Amanda', 'Taylor', 'amanda.taylor@email.com', 26, 61000.00);
+INSERT INTO Users (FirstName, LastName, Email, Age, Salary, MiddleName, PhoneNumber, LastLoginDate) VALUES
+('John', 'Doe', 'john.doe@email.com', 30, 75000.00, 'Michael', '555-0123', '2024-01-15 10:30:00'),
+('Jane', 'Smith', 'jane.smith@email.com', 28, 68000.00, NULL, '555-0124', NULL),
+('Mike', 'Johnson', 'mike.johnson@email.com', 35, 82000.00, 'Robert', NULL, '2024-01-10 14:22:00'),
+('Sarah', 'Wilson', 'sarah.wilson@email.com', NULL, 71000.00, 'Elizabeth', '555-0126', '2024-01-12 09:15:00'),
+('David', 'Brown', 'david.brown@email.com', 29, NULL, NULL, '555-0127', NULL),
+('Emily', 'Davis', 'emily.davis@email.com', 27, 63000.00, 'Rose', '555-0128', '2024-01-08 16:45:00'),
+('Robert', 'Miller', 'robert.miller@email.com', 45, 95000.00, 'James', NULL, '2024-01-14 11:20:00'),
+('Lisa', 'Garcia', 'lisa.garcia@email.com', NULL, NULL, NULL, '555-0130', NULL),
+('Mark', 'Anderson', 'mark.anderson@email.com', 38, 89000.00, 'Thomas', '555-0131', '2024-01-11 13:55:00'),
+('Amanda', 'Taylor', 'amanda.taylor@email.com', 26, 61000.00, NULL, NULL, '2024-01-09 08:30:00');
 GO
 
-INSERT INTO Products (ProductName, Category, Price, Stock, Description) VALUES
-('Laptop Pro 15', 'Electronics', 1299.99, 25, 'High-performance laptop for professionals'),
-('Wireless Mouse', 'Electronics', 29.99, 150, 'Ergonomic wireless mouse with precision tracking'),
-('Office Chair', 'Furniture', 249.99, 45, 'Comfortable ergonomic office chair'),
-('Standing Desk', 'Furniture', 399.99, 20, 'Adjustable height standing desk'),
-('Mechanical Keyboard', 'Electronics', 129.99, 75, 'RGB mechanical gaming keyboard'),
-('Monitor 27inch', 'Electronics', 349.99, 30, '4K resolution 27-inch monitor'),
-('Desk Lamp', 'Furniture', 49.99, 60, 'LED desk lamp with adjustable brightness'),
-('Webcam HD', 'Electronics', 89.99, 40, 'Full HD webcam for video conferencing'),
-('Headphones', 'Electronics', 199.99, 85, 'Noise-cancelling wireless headphones'),
-('Tablet 10inch', 'Electronics', 299.99, 35, 'Lightweight tablet for productivity');
+INSERT INTO Products (ProductName, Category, Price, Stock, Description, DiscountPercentage, ManufacturerCode) VALUES
+('Laptop Pro 15', 'Electronics', 1299.99, 25, 'High-performance laptop for professionals', 10.50, 'LP15-2024'),
+('Wireless Mouse', 'Electronics', 29.99, 150, 'Ergonomic wireless mouse with precision tracking', NULL, 'WM-ERG01'),
+('Office Chair', 'Furniture', 249.99, 45, 'Comfortable ergonomic office chair', 15.00, NULL),
+('Standing Desk', NULL, 399.99, 20, NULL, NULL, 'SD-ADJ99'),
+('Mechanical Keyboard', 'Electronics', 129.99, 75, 'RGB mechanical gaming keyboard', 5.00, 'MK-RGB2024'),
+('Monitor 27inch', 'Electronics', 349.99, 30, '4K resolution 27-inch monitor', NULL, NULL),
+('Desk Lamp', 'Furniture', 49.99, 60, NULL, 20.00, 'DL-LED001'),
+('Webcam HD', NULL, 89.99, 40, 'Full HD webcam for video conferencing', NULL, 'WC-HD1080'),
+('Headphones', 'Electronics', 199.99, 85, 'Noise-cancelling wireless headphones', 25.00, NULL),
+('Tablet 10inch', 'Electronics', 299.99, 35, NULL, NULL, 'TB-10PRO');
 GO
 
 INSERT INTO Orders (UserID, TotalAmount, Status) VALUES

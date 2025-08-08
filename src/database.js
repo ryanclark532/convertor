@@ -1,5 +1,8 @@
 const sql = require('mssql');
 
+/**
+ * @param {string} connectionString
+ */
 async function connectToDatabase(connectionString) {
   try {
     console.log('Connecting to database...');
@@ -12,6 +15,9 @@ async function connectToDatabase(connectionString) {
   }
 }
 
+/**
+ * @param {import('mssql').ConnectionPool} pool
+ */
 async function getTableColumns(pool) {
     try {
         const query = `
@@ -34,9 +40,8 @@ async function getTableColumns(pool) {
             const tableName = row.TABLE_NAME;
             const columnName = row.COLUMN_NAME;
             const dataType = row.DATA_TYPE;
-            const isNullable = row.IS_NULLABLE === 1;
+            const isNullable = row.IS_NULLABLE === true;
             
-            // Create table map if it doesn't exist
             if (!tableColumnsMap.has(tableName)) {
                 tableColumnsMap.set(tableName, new Map());
             }
@@ -55,6 +60,9 @@ async function getTableColumns(pool) {
     }
 }
 
+/**
+ * @param {import('mssql').ConnectionPool} pool
+ */
 async function getStoredProcedures(pool) {
     try {
         const query = `

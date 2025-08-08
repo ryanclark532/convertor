@@ -6,6 +6,12 @@
       "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/src/index.js",
+      "args": [
+        "-o",
+        "output",
+        "-c",
+        "Server=localhost,1433;Database=TestDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=true;"
+      ],
       "console": "integratedTerminal",
       "skipFiles": ["<node_internals>/**"]
     },
